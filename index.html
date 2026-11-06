@@ -3,35 +3,65 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>منصة الطلبة – المدرسة العليا للتربية والتكوين بالقنيطرة</title>
+<title>دروسي – دروس وامتحانات ومراجع طلبة المدرسة العليا للتربية والتكوين</title>
 <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@700&family=Readex+Pro:wght@300;400;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
-<div class="wrap">
-<header>
-<div class="school" id="school"></div>
-<h1 id="title"></h1>
-<div class="row"><span class="lab">الشعبة</span><select id="spec" aria-label="الشعبة"></select></div>
-</header>
-<input id="q" type="search" placeholder="ابحث عن درس أو مادة أو مرجع أو سنة…" aria-label="بحث">
-<div class="row"><span class="lab">السداسي</span><div class="mods" id="sems"></div></div>
-<div class="row"><span class="lab">المادة</span><div class="mods" id="mods"></div></div>
-<div class="row"><span class="lab">النوع</span><div class="mods" id="types"></div><button class="chip" id="favOnly" aria-pressed="false">المحفوظات فقط</button></div>
-<div class="count" id="count" aria-live="polite"></div>
-<div class="list" id="list"></div>
-<details>
-<summary>شارك مصدراً مع زملائك</summary>
-<form id="add">
-<input class="full" name="title" placeholder="العنوان" required>
-<select name="sem"></select><select name="mod"></select>
-<select name="type"><option>درس</option><option>امتحان سابق</option><option>مرجع</option><option>ملخص</option></select>
-<input name="year" placeholder="السنة الجامعية (اختياري)">
-<input class="full" name="url" type="url" placeholder="رابط الملف https://…" required>
-<button class="full">نشر المصدر</button>
-</form>
-</details>
-</div>
+<a class="skip" href="#main">انتقل إلى المحتوى</a>
+<nav class="top"><div class="in">
+ <a class="brand" href="#" id="home"><svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true"><path d="M15 1l4 10 10 4-10 4-4 10-4-10-10-4 10-4z" fill="var(--gold)"/></svg><span id="brand"></span></a>
+ <div class="nav-act"><button class="ghost" id="theme" aria-label="تبديل الوضع الليلي">◐</button><button class="ghost" id="login">دخول المشرفين</button><button class="btn" id="addBtn" data-open hidden>+ إضافة مصدر</button><button class="ghost" id="logout" hidden>خروج</button></div>
+</div></nav>
+<header class="hero"><div class="in">
+ <p class="school" id="school"></p>
+ <h1 id="headline"></h1>
+ <p class="sub" id="sub"></p>
+ <div class="searchbox">
+  <input id="q" type="search" placeholder="ابحث عن درس أو مادة أو امتحان أو مرجع…" aria-label="بحث">
+  <select id="spec" aria-label="الشعبة"></select>
+ </div>
+ <div class="stats" id="stats"></div>
+</div></header>
+<main id="main" class="in">
+ <section id="browse">
+  <h2>تصفح حسب السداسي</h2>
+  <div class="tabs" id="sems" role="tablist"></div>
+  <div class="grid" id="modGrid"></div>
+  <div class="how">
+   <div><b>1</b><h3>اختر سداسيك</h3><p>تظهر لك مواد السداسي مباشرة.</p></div>
+   <div><b>2</b><h3>افتح المادة</h3><p>ستجد الدروس والامتحانات السابقة والمراجع.</p></div>
+   <div><b>3</b><h3>شارك ما عندك</h3><p>ملخصاتك وامتحانات السنوات الماضية تفيد من يأتي بعدك.</p></div>
+  </div>
+ </section>
+ <section id="results" hidden>
+  <div class="rhead"><button class="ghost" id="back">← رجوع</button><h2 id="rtitle"></h2></div>
+  <div class="toolbar"><div class="tabs" id="types"></div><button class="chip" id="favOnly" aria-pressed="false">★ المحفوظات</button></div>
+  <div class="count" id="count" aria-live="polite"></div>
+  <div class="list" id="list"></div>
+ </section>
+</main>
+<footer><div class="in"><b id="foot-school"></b><p>منصة طلابية يصنعها الطلبة لمساعدة بعضهم. نسخة تجريبية.</p></div></footer>
+
+<dialog id="dlg">
+ <form id="add">
+  <h2>إضافة مصدر جديد</h2>
+  <label>العنوان<input name="title" placeholder="مثال: ملخص محاضرة أصول الفقه" required></label>
+  <div class="two"><label>السداسي<select name="sem"></select></label><label>المادة<select name="mod"></select></label></div>
+  <div class="two"><label>النوع<select name="type"><option>درس</option><option>امتحان سابق</option><option>مرجع</option><option>ملخص</option></select></label>
+  <label>السنة الجامعية<input name="year" placeholder="2023/2024 (اختياري)"></label></div>
+  <label>رابط الملف<input name="url" type="url" placeholder="https://…" required></label>
+  <p class="hint">ارفع ملفك على Google Drive واجعله «لأي شخص لديه الرابط»، ثم الصق الرابط هنا.</p>
+  <div class="two"><button class="btn" type="submit">نشر المصدر</button><button class="ghost" type="button" id="cancel">إلغاء</button></div>
+ </form>
+</dialog>
+<dialog id="ldlg"><form id="lform"><h2>دخول المشرفين</h2>
+ <label>البريد الإلكتروني<input name="email" type="email" autocomplete="username" required></label>
+ <label>كلمة المرور<input name="password" type="password" autocomplete="current-password" required></label>
+ <p class="hint" id="authmsg" role="alert"></p>
+ <div class="two"><button class="btn" type="submit">دخول</button><button class="ghost" type="button" id="lcancel">إلغاء</button></div></form></dialog>
+<div class="toast" id="toast" role="status"></div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.58.0/dist/umd/supabase.js"></script>
 <script src="data.js"></script>
 <script src="app.js"></script>
 </body>
