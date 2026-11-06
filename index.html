@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>منصة الطلبة – المدرسة العليا للتربية والتكوين بالقنيطرة</title>
+<link href="https://fonts.googleapis.com/css2?family=Amiri:wght@700&family=Readex+Pro:wght@300;400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="wrap">
+<header>
+<div class="school" id="school"></div>
+<h1 id="title"></h1>
+<div class="row"><span class="lab">الشعبة</span><select id="spec" aria-label="الشعبة"></select></div>
+</header>
+<input id="q" type="search" placeholder="ابحث عن درس أو مادة أو مرجع أو سنة…" aria-label="بحث">
+<div class="row"><span class="lab">السداسي</span><div class="mods" id="sems"></div></div>
+<div class="row"><span class="lab">المادة</span><div class="mods" id="mods"></div></div>
+<div class="row"><span class="lab">النوع</span><div class="mods" id="types"></div><button class="chip" id="favOnly" aria-pressed="false">المحفوظات فقط</button></div>
+<div class="count" id="count" aria-live="polite"></div>
+<div class="list" id="list"></div>
+<details>
+<summary>شارك مصدراً مع زملائك</summary>
+<form id="add">
+<input class="full" name="title" placeholder="العنوان" required>
+<select name="sem"></select><select name="mod"></select>
+<select name="type"><option>درس</option><option>امتحان سابق</option><option>مرجع</option><option>ملخص</option></select>
+<input name="year" placeholder="السنة الجامعية (اختياري)">
+<input class="full" name="url" type="url" placeholder="رابط الملف https://…" required>
+<button class="full">نشر المصدر</button>
+</form>
+</details>
+</div>
+<script src="data.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
