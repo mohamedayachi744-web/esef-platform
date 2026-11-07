@@ -20,6 +20,7 @@ const $=s=>document.querySelector(s);
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const COLOR={'درس':'var(--lesson)','امتحان سابق':'var(--exam)','مرجع':'var(--ref)','ملخص':'var(--sum)'};
 const noun=n=>n===0?'لا مصادر بعد':n===1?'مصدر واحد':n===2?'مصدران':n<=10?n+' مصادر':n+' مصدراً';
+const norm=s=>String(s||'').toLowerCase().replace(/[\u064B-\u065F\u0670\u0640]/g,'').replace(/[إأآٱ]/g,'ا').replace(/ى/g,'ي').replace(/ة/g,'ه');
 let items=[],favs=Store.favs(),spec=SPECIALTIES[0],sem,mod=null,type='الكل',fav=false,q='';
 const mine=()=>items.filter(i=>i.spec===spec.id);
 function reset(){sem=Object.keys(spec.semesters)[0];mod=null;type='الكل';fav=false;q='';$('#q').value='';$('#favOnly').setAttribute('aria-pressed','false')}
@@ -30,6 +31,7 @@ function render(){
  $('#stats').innerHTML=[[all.length,'مصدر'],[Object.values(spec.semesters).flat().length,'مادة'],[Object.keys(spec.semesters).length,'سداسيات']].map(([n,l])=>`<div><b>${n}</b><span>${l}</span></div>`).join('');
  $('#browse').hidden=!!active;$('#results').hidden=!active;
  active?drawResults(all):drawBrowse(all);
+ try{history.replaceState(null,'',mod&&!q?'#'+encodeURIComponent(sem+'|'+mod):location.pathname+location.search)}catch(e){}
 }
 function drawBrowse(all){
  $('#sems').innerHTML=Object.keys(spec.semesters).map(s=>`<button class="tab" role="tab" aria-selected="${s===sem}" data-sem="${esc(s)}">${esc(s)}</button>`).join('');
@@ -40,7 +42,7 @@ function drawBrowse(all){
 }
 function drawResults(all){
  let l=all;
- if(q){const s=q.toLowerCase();l=l.filter(i=>[i.title,i.mod,i.year,i.sem].join(' ').toLowerCase().includes(s))}
+ if(q){const s=norm(q);l=l.filter(i=>norm([i.title,i.mod,i.year,i.sem].join(' ')).includes(s))}
  else if(mod)l=l.filter(i=>i.sem===sem&&i.mod===mod);
  if(fav)l=l.filter(i=>favs.has(i.id));
  const base=l.length;
@@ -98,5 +100,8 @@ $('#logout').onclick=async()=>{await sb.auth.signOut();isAdmin=false;await reloa
 (async()=>{
  $('#brand').textContent=SITE.brand;$('#school').textContent=SITE.school;$('#headline').textContent=SITE.headline;$('#sub').textContent=SITE.sub;$('#foot-school').textContent=SITE.school;
  $('#spec').innerHTML=SPECIALTIES.map(s=>`<option value="${s.id}">${esc(s.name)}</option>`).join('');
- await checkAdmin();reset();await reload();
+ await checkAdmin();reset();
+ try{const [s,m]=decodeURIComponent(location.hash.slice(1)).split('|');if(spec.semesters[s]&&spec.semesters[s].includes(m)){sem=s;mod=m}}catch(e){}
+ await reload();
+ if('serviceWorker'in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
 })();
