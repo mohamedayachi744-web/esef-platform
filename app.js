@@ -28,7 +28,7 @@ function toast(t){const e=$('#toast');e.textContent=t;e.classList.add('on');setT
 
 function render(){
  const all=mine(),active=q||mod||fav;
- $('#stats').innerHTML=[[all.length,'مصدر'],[Object.values(spec.semesters).flat().length,'مادة'],[Object.keys(spec.semesters).length,'سداسيات']].map(([n,l])=>`<div><b>${n}</b><span>${l}</span></div>`).join('');
+ $('#stats').innerHTML=[[all.length,'مصدر'],[Object.values(spec.semesters).flat().length,'مادة'],[Object.keys(spec.semesters).length,'فصول']].map(([n,l])=>`<div><b>${n}</b><span>${l}</span></div>`).join('');
  $('#browse').hidden=!!active;$('#results').hidden=!active;
  active?drawResults(all):drawBrowse(all);
  try{history.replaceState(null,'',mod&&!q?'#'+encodeURIComponent(sem+'|'+mod):location.pathname+location.search)}catch(e){}
@@ -38,7 +38,7 @@ function drawBrowse(all){
  $('#modGrid').innerHTML=spec.semesters[sem].map(m=>{
   const l=all.filter(i=>i.sem===sem&&i.mod===m);
   const b=['درس','امتحان سابق','مرجع','ملخص'].map(t=>[t,l.filter(i=>i.type===t).length]).filter(x=>x[1]).map(([t,n])=>`<span class="bd" style="--c:${COLOR[t]}">${n} ${t}</span>`).join('');
-  return `<button class="mcard" data-mod="${esc(m)}"><h3>${esc(m)}</h3><p>${noun(l.length)}</p><div class="badges">${b}</div></button>`}).join('');
+  return `<button class="mcard" data-mod="${esc(m)}"><h3>${esc(m)}</h3><p>${noun(l.length)}</p><div class="badges">${b}</div></button>`}).join('')||'<div class="empty" style="grid-column:1/-1"><h3>سيُضاف مقرر هذا الفصل قريباً</h3><p>لم تُحدَّد مواد هذا الفصل بعد.</p></div>';
 }
 function drawResults(all){
  let l=all;
@@ -78,6 +78,7 @@ $('#spec').onchange=e=>{spec=SPECIALTIES.find(s=>s.id===e.target.value);reset();
 $('#cancel').onclick=()=>$('#dlg').close();
 $('#add').onsubmit=async e=>{e.preventDefault();
  const d=Object.fromEntries(new FormData(e.target));d.spec=spec.id;
+ if(!d.mod){toast('لا توجد مواد في هذا الفصل بعد');return}
  try{const r=await Store.add(d);items.unshift(r);$('#dlg').close();e.target.reset();
   reset();sem=d.sem;mod=d.mod;render();toast('تم نشر المصدر')}
  catch(err){toast('تعذر النشر: '+(err.message||'خطأ غير معروف'))}
