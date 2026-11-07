@@ -28,17 +28,18 @@ function toast(t){const e=$('#toast');e.textContent=t;e.classList.add('on');setT
 
 function render(){
  const all=mine(),active=q||mod||fav;
- $('#stats').innerHTML=[[all.length,'مصدر'],[Object.values(spec.semesters).flat().length,'مادة'],[Object.keys(spec.semesters).length,'فصول']].map(([n,l])=>`<div><b>${n}</b><span>${l}</span></div>`).join('');
+ $('#stats').innerHTML=[...(all.length?[[all.length,'مصدر']]:[]),[Object.values(spec.semesters).flat().length,'مادة'],[Object.keys(spec.semesters).length,'فصول']].map(([n,l])=>`<div><b>${n}</b><span>${l}</span></div>`).join('');
  $('#browse').hidden=!!active;$('#results').hidden=!active;
  active?drawResults(all):drawBrowse(all);
  try{history.replaceState(null,'',mod&&!q?'#'+encodeURIComponent(sem+'|'+mod):location.pathname+location.search)}catch(e){}
 }
 function drawBrowse(all){
+ $('#notice').hidden=all.length>0;
  $('#sems').innerHTML=Object.keys(spec.semesters).map(s=>`<button class="tab" role="tab" aria-selected="${s===sem}" data-sem="${esc(s)}">${esc(s)}</button>`).join('');
- $('#modGrid').innerHTML=spec.semesters[sem].map(m=>{
+ $('#modGrid').innerHTML=spec.semesters[sem].map((m,idx)=>{
   const l=all.filter(i=>i.sem===sem&&i.mod===m);
   const b=['درس','امتحان سابق','مرجع','ملخص'].map(t=>[t,l.filter(i=>i.type===t).length]).filter(x=>x[1]).map(([t,n])=>`<span class="bd" style="--c:${COLOR[t]}">${n} ${t}</span>`).join('');
-  return `<button class="mcard" data-mod="${esc(m)}"><h3>${esc(m)}</h3><p>${noun(l.length)}</p><div class="badges">${b}</div></button>`}).join('')||'<div class="empty" style="grid-column:1/-1"><h3>سيُضاف مقرر هذا الفصل قريباً</h3><p>لم تُحدَّد مواد هذا الفصل بعد.</p></div>';
+  return `<button class="mcard" data-mod="${esc(m)}"><span class="no">${idx+1}</span><h3>${esc(m)}</h3><p>${l.length?noun(l.length):'قريباً'}</p><div class="badges">${b}</div></button>`}).join('')||'<div class="empty" style="grid-column:1/-1"><h3>سيُضاف مقرر هذا الفصل قريباً</h3><p>لم تُحدَّد مواد هذا الفصل بعد.</p></div>';
 }
 function drawResults(all){
  let l=all;
