@@ -8,6 +8,7 @@ const Store={
  saveFavs(s){try{localStorage.setItem('favs',JSON.stringify([...s]))}catch(e){}}
 };
 let isAdmin=false;
+function showSkeleton(){$('#modGrid').innerHTML=Array(6).fill('<div class="sk"></div>').join('');$('#modGrid').setAttribute('aria-busy','true')}
 async function checkAdmin(){
  const {data:{session}}=await sb.auth.getSession();
  if(!session){isAdmin=false;return}
@@ -15,15 +16,17 @@ async function checkAdmin(){
  isAdmin=!!data;
 }
 function drawAuth(){$('#login').hidden=isAdmin;$('#logout').hidden=!isAdmin;$('#addBtn').hidden=!isAdmin}
-async function reload(){try{items=await Store.list()}catch(e){items=[];toast('تعذر تحميل المصادر، تحقق من الاتصال')}drawAuth();render()}
+async function reload(){if(!$('#browse').hidden)showSkeleton();try{items=await Store.list()}catch(e){items=[];toast('تعذر تحميل المصادر، تحقق من الاتصال')}drawAuth();render()}
 const $=s=>document.querySelector(s);
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const safeUrl=u=>/^https?:\/\//i.test(String(u))?u:'#';
 const COLOR={'درس':'var(--lesson)','امتحان سابق':'var(--exam)','مرجع':'var(--ref)','ملخص':'var(--sum)'};
 const noun=n=>n===0?'لا مصادر بعد':n===1?'مصدر واحد':n===2?'مصدران':n<=10?n+' مصادر':n+' مصدراً';
+let tm;
 const norm=s=>String(s||'').toLowerCase().replace(/[\u064B-\u065F\u0670\u0640]/g,'').replace(/[إأآٱ]/g,'ا').replace(/ى/g,'ي').replace(/ة/g,'ه');
 let items=[],favs=Store.favs(),spec=SPECIALTIES[0],sem,mod=null,type='الكل',fav=false,q='';
 const mine=()=>items.filter(i=>i.spec===spec.id);
-function reset(){sem=Object.keys(spec.semesters)[0];mod=null;type='الكل';fav=false;q='';$('#q').value='';$('#favOnly').setAttribute('aria-pressed','false')}
+function reset(){clearTimeout(tm);sem=Object.keys(spec.semesters)[0];mod=null;type='الكل';fav=false;q='';$('#q').value='';$('#favOnly').setAttribute('aria-pressed','false')}
 function toast(t){const e=$('#toast');e.textContent=t;e.classList.add('on');setTimeout(()=>e.classList.remove('on'),2200)}
 
 function render(){
@@ -34,7 +37,7 @@ function render(){
  try{history.replaceState(null,'',mod&&!q?'#'+encodeURIComponent(sem+'|'+mod):location.pathname+location.search)}catch(e){}
 }
 function drawBrowse(all){
- $('#notice').hidden=all.length>0;
+ $('#notice').hidden=all.length>0;$('#modGrid').removeAttribute('aria-busy');
  $('#sems').innerHTML=Object.keys(spec.semesters).map(s=>`<button class="tab" role="tab" aria-selected="${s===sem}" data-sem="${esc(s)}">${esc(s)}</button>`).join('');
  $('#modGrid').innerHTML=spec.semesters[sem].map((m,idx)=>{
   const l=all.filter(i=>i.sem===sem&&i.mod===m);
@@ -51,7 +54,7 @@ function drawResults(all){
  $('#rtitle').textContent=q?`نتائج البحث عن «${q}»`:mod?`${sem} › ${mod}`:'المحفوظات';
  $('#types').innerHTML=TYPES.map(t=>`<button class="tab" aria-selected="${t===type}" data-type="${t}">${t}</button>`).join('');
  $('#count').textContent=l.length?noun(l.length):'';
- $('#list').innerHTML=l.length?l.map(i=>`<article class="item"><span class="tbadge" style="--c:${COLOR[i.type]}">${esc(i.type)}</span><div class="body"><h3>${esc(i.title)}</h3><div class="meta">${esc(i.mod)} – ${esc(i.sem)}${i.year?' – '+esc(i.year):''}</div></div><div class="act"><a href="${esc(i.url)}" target="_blank" rel="noopener">فتح</a>${isAdmin?`<button class="del" data-del="${i.id}">حذف</button>`:''}<button class="star" data-id="${i.id}" aria-pressed="${favs.has(i.id)}" aria-label="حفظ">★</button></div></article>`).join('')
+ $('#list').innerHTML=l.length?l.map(i=>`<article class="item"><span class="tbadge" style="--c:${COLOR[i.type]}">${esc(i.type)}</span><div class="body"><h3>${esc(i.title)}</h3><div class="meta">${esc(i.mod)} – ${esc(i.sem)}${i.year?' – '+esc(i.year):''}</div></div><div class="act"><a href="${esc(safeUrl(i.url))}" target="_blank" rel="noopener">فتح</a>${isAdmin?`<button class="del" data-del="${esc(i.id)}">حذف</button>`:''}<button class="star" data-id="${esc(i.id)}" aria-pressed="${favs.has(i.id)}" aria-label="حفظ">★</button></div></article>`).join('')
  :`<div class="empty"><h3>${base?'لا توجد مصادر من هذا النوع':fav?'لم تحفظ أي مصدر بعد':'لا توجد مصادر هنا بعد'}</h3><p>${fav?'اضغط ★ على أي مصدر لحفظه هنا.':'سيُضاف المحتوى قريباً.'}</p>${fav?'':isAdmin?'<button class="btn" data-open>+ إضافة مصدر</button>':''}</div>`;
 }
 function fillForm(s,m){
@@ -74,12 +77,22 @@ document.addEventListener('click',e=>{
 $('#back').onclick=()=>{reset();render()};
 $('#home').onclick=e=>{e.preventDefault();reset();render()};
 $('#favOnly').onclick=e=>{fav=!fav;e.currentTarget.setAttribute('aria-pressed',fav);render()};
-$('#q').addEventListener('input',e=>{q=e.target.value.trim();type='الكل';render()});
+const DEBOUNCE_MS=300; // زمن الانتظار بعد توقف الكتابة (بالميلي ثانية)
+$('#q').addEventListener('input',e=>{clearTimeout(tm);const v=e.target.value;tm=setTimeout(()=>{q=v.trim().slice(0,100);type='الكل';render()},DEBOUNCE_MS)});
 $('#spec').onchange=e=>{spec=SPECIALTIES.find(s=>s.id===e.target.value);reset();render()};
 $('#cancel').onclick=()=>$('#dlg').close();
+function checkUrl(u){
+ let x;try{x=new URL(u)}catch(e){return'الرابط غير صالح'}
+ if(x.protocol!=='https:')return'يجب أن يبدأ الرابط بـ https://';
+ if(/\.(exe|msi|bat|cmd|sh|js|jar|apk|scr|ps1|vbs|dmg)$/i.test(x.pathname))return'نوع الملف غير مسموح';
+ const ok=ALLOWED_HOSTS.some(h=>x.hostname===h||x.hostname.endsWith('.'+h));
+ if(!ok&&!confirm('هذا الرابط ليس من المواقع المعتمدة ('+x.hostname+'). هل أنت متأكد من سلامته؟'))return'تم إلغاء الإضافة';
+ return'';
+}
 $('#add').onsubmit=async e=>{e.preventDefault();
  const d=Object.fromEntries(new FormData(e.target));d.spec=spec.id;
  if(!d.mod){toast('لا توجد مواد في هذا الفصل بعد');return}
+ const bad=checkUrl(d.url);if(bad){toast(bad);return}
  try{const r=await Store.add(d);items.unshift(r);$('#dlg').close();e.target.reset();
   reset();sem=d.sem;mod=d.mod;render();toast('تم نشر المصدر')}
  catch(err){toast('تعذر النشر: '+(err.message||'خطأ غير معروف'))}
@@ -102,7 +115,7 @@ $('#logout').onclick=async()=>{await sb.auth.signOut();isAdmin=false;await reloa
 (async()=>{
  $('#brand').textContent=SITE.brand;$('#school').textContent=SITE.school;$('#headline').textContent=SITE.headline;$('#sub').textContent=SITE.sub;$('#foot-school').textContent=SITE.school;
  $('#spec').innerHTML=SPECIALTIES.map(s=>`<option value="${s.id}">${esc(s.name)}</option>`).join('');
- await checkAdmin();reset();
+ showSkeleton();await checkAdmin();reset();
  try{const [s,m]=decodeURIComponent(location.hash.slice(1)).split('|');if(spec.semesters[s]&&spec.semesters[s].includes(m)){sem=s;mod=m}}catch(e){}
  await reload();
  if('serviceWorker'in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});

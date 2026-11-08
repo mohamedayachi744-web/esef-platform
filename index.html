@@ -23,7 +23,7 @@
  <h1 id="headline"></h1>
  <p class="sub" id="sub"></p>
  <div class="searchbox">
-  <input id="q" type="search" placeholder="ابحث عن درس أو مادة أو امتحان أو مرجع…" aria-label="بحث">
+  <input id="q" type="search" maxlength="100" autocomplete="off" placeholder="ابحث عن درس أو مادة أو امتحان أو مرجع…" aria-label="بحث">
   <select id="spec" aria-label="الشعبة"></select>
  </div>
  <div class="stats" id="stats"></div>
@@ -52,11 +52,11 @@
 <dialog id="dlg">
  <form id="add">
   <h2>إضافة مصدر جديد</h2>
-  <label>العنوان<input name="title" placeholder="مثال: ملخص محاضرة أصول الفقه" required></label>
+  <label>العنوان<input name="title" minlength="3" maxlength="200" placeholder="مثال: ملخص محاضرة أصول الفقه" required></label>
   <div class="two"><label>الفصل<select name="sem"></select></label><label>المادة<select name="mod"></select></label></div>
   <div class="two"><label>النوع<select name="type"><option>درس</option><option>امتحان سابق</option><option>مرجع</option><option>ملخص</option></select></label>
-  <label>السنة الجامعية<input name="year" placeholder="2023/2024 (اختياري)"></label></div>
-  <label>رابط الملف<input name="url" type="url" placeholder="https://…" required></label>
+  <label>السنة الجامعية<input name="year" maxlength="20" placeholder="2023/2024 (اختياري)"></label></div>
+  <label>رابط الملف<input name="url" type="url" maxlength="500" pattern="https://.*" title="يجب أن يبدأ الرابط بـ https://" placeholder="https://…" required></label>
   <p class="hint">ارفع ملفك على Google Drive واجعله «لأي شخص لديه الرابط»، ثم الصق الرابط هنا.</p>
   <div class="two"><button class="btn" type="submit">نشر المصدر</button><button class="ghost" type="button" id="cancel">إلغاء</button></div>
  </form>

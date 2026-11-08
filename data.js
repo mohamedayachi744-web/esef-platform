@@ -20,3 +20,6 @@ const SPECIALTIES=[
 
 // اتصال Supabase: المفتاح العام آمن للنشر. لا تضع هنا أبداً مفتاح secret أو service_role.
 const SUPABASE={url:'https://ytwmluzimvezcpnhzeqb.supabase.co',key:'sb_publishable_e5gCBqKB_ONWZ1ZLR47APQ_lXVSNOBs'};
+
+// المواقع المعتمدة للروابط. أي رابط من غيرها يطلب تأكيداً إضافياً من المشرف قبل الحفظ.
+const ALLOWED_HOSTS=['drive.google.com','docs.google.com','shamela.ws','dorar.net','tanzil.net'];
