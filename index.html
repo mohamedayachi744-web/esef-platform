@@ -16,7 +16,7 @@
 <a class="skip" href="#main">انتقل إلى المحتوى</a>
 <nav class="top"><div class="in">
  <a class="brand" href="#" id="home"><svg width="36" height="36" viewBox="0 0 512 512" aria-hidden="true"><rect width="512" height="512" rx="96" fill="rgba(255,255,255,.14)"/><path d="M256 360C220 330 150 322 100 335V205C150 192 220 200 256 230Z" fill="#f4f1e6"/><path d="M256 360C292 330 362 322 412 335V205C362 192 292 200 256 230Z" fill="#e3ddc9"/><path d="M256 86l14 40 40 14-40 14-14 40-14-40-40-14 40-14z" fill="#c0912f"/><path d="M110 372C160 358 220 364 256 392C292 364 352 358 402 372" fill="none" stroke="#c0912f" stroke-width="10" stroke-linecap="round"/></svg><span id="brand"></span></a>
- <div class="nav-act"><button class="ghost" id="theme" aria-label="تبديل الوضع الليلي">◐</button><button class="ghost" id="login">دخول المشرفين</button><button class="btn" id="addBtn" data-open hidden>+ إضافة مصدر</button><button class="ghost" id="logout" hidden>خروج</button></div>
+ <div class="nav-act"><button class="ghost" id="theme" aria-label="تبديل الوضع الليلي">◐</button><button class="ghost" id="login">دخول الفريق</button><button class="ghost" id="panelBtn" hidden></button><button class="btn" id="addBtn" data-open hidden>+ إضافة مصدر</button><button class="ghost" id="logout" hidden>خروج</button></div>
 </div></nav>
 <header class="hero"><div class="in">
  <p class="school" id="school"></p>
@@ -51,21 +51,22 @@
 
 <dialog id="dlg">
  <form id="add">
-  <h2>إضافة مصدر جديد</h2>
+  <h2 id="atitle">إضافة مصدر جديد</h2>
   <label>العنوان<input name="title" minlength="3" maxlength="200" placeholder="مثال: ملخص محاضرة أصول الفقه" required></label>
   <div class="two"><label>الفصل<select name="sem"></select></label><label>المادة<select name="mod"></select></label></div>
   <div class="two"><label>النوع<select name="type"><option>درس</option><option>امتحان سابق</option><option>مرجع</option><option>ملخص</option></select></label>
   <label>السنة الجامعية<input name="year" maxlength="20" placeholder="2023/2024 (اختياري)"></label></div>
   <label>رابط الملف<input name="url" type="url" maxlength="500" pattern="https://.*" title="يجب أن يبدأ الرابط بـ https://" placeholder="https://…" required></label>
   <p class="hint">ارفع ملفك على Google Drive واجعله «لأي شخص لديه الرابط»، ثم الصق الرابط هنا.</p>
-  <div class="two"><button class="btn" type="submit">نشر المصدر</button><button class="ghost" type="button" id="cancel">إلغاء</button></div>
+  <div class="two"><button class="btn" type="submit" id="asubmit">نشر المصدر</button><button class="ghost" type="button" id="cancel">إلغاء</button></div>
  </form>
 </dialog>
-<dialog id="ldlg"><form id="lform"><h2>دخول المشرفين</h2>
+<dialog id="ldlg"><form id="lform"><h2>دخول فريق المنصة</h2>
  <label>البريد الإلكتروني<input name="email" type="email" autocomplete="username" required></label>
  <label>كلمة المرور<input name="password" type="password" autocomplete="current-password" required></label>
  <p class="hint" id="authmsg" role="alert"></p>
  <div class="two"><button class="btn" type="submit">دخول</button><button class="ghost" type="button" id="lcancel">إلغاء</button></div></form></dialog>
+<dialog id="pdlg"><div class="pwrap"><h2 id="ptitle"></h2><div class="tabs" id="ptabs"></div><div id="plist"></div><button class="ghost" type="button" id="pclose">إغلاق</button></div></dialog>
 <div class="toast" id="toast" role="status"></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.58.0/dist/umd/supabase.js"></script>
 <script src="data.js"></script>

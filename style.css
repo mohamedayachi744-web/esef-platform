@@ -84,3 +84,11 @@ dialog .btn{background:var(--accent);color:var(--on-accent)}
 .grid>.mcard{animation:fade .22s ease-out}
 @media(max-width:480px){.grid{grid-template-columns:1fr}}
 @media(prefers-reduced-motion:reduce){.sk,.grid>.mcard{animation:none!important}}
+
+#pdlg{width:min(680px,94vw)}
+.pwrap{padding:20px;display:grid;gap:12px}
+#plist{display:grid;gap:10px;max-height:56vh;overflow:auto}
+.pitem{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;border:1px solid var(--line);border-radius:12px;padding:12px 14px}
+.plink{font-size:.85rem;color:var(--accent)}
+.act .ok{background:var(--accent);color:var(--on-accent);border-color:var(--accent)}
+.top .ghost{white-space:nowrap}
