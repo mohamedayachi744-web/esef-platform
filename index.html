@@ -47,7 +47,7 @@
   <div class="list" id="list"></div>
  </section>
 </main>
-<footer><div class="in"><b id="foot-school"></b><p>منصة طلابية يصنعها الطلبة لمساعدة بعضهم. نسخة تجريبية.</p></div></footer>
+<footer><div class="in"><b id="foot-school"></b><p>منصة طلابية يصنعها الطلبة لمساعدة بعضهم. نسخة تجريبية.</p><button class="linkbtn" id="aboutBtn" type="button">عن المنصة وسياسة المحتوى</button></div></footer>
 
 <dialog id="dlg">
  <form id="add">
@@ -66,6 +66,20 @@
  <label>كلمة المرور<input name="password" type="password" autocomplete="current-password" required></label>
  <p class="hint" id="authmsg" role="alert"></p>
  <div class="two"><button class="btn" type="submit">دخول</button><button class="ghost" type="button" id="lcancel">إلغاء</button></div></form></dialog>
+<dialog id="rdlg"><form id="rform"><h2>بلّغ عن مشكلة</h2>
+ <label>نوع المشكلة<select name="reason"><option>ملف خاطئ</option><option>رابط لا يعمل</option><option>مخالف لحقوق النشر</option><option>محتوى غير لائق</option><option>أخرى</option></select></label>
+ <label>تفاصيل (اختياري)<textarea name="note" rows="3" maxlength="300"></textarea></label>
+ <input class="hp" name="website" tabindex="-1" autocomplete="off" aria-hidden="true">
+ <p class="hint">لا تكتب بياناتك الشخصية هنا.</p>
+ <div class="two"><button class="btn" type="submit">إرسال البلاغ</button><button class="ghost" type="button" id="rcancel">إلغاء</button></div></form></dialog>
+<dialog id="adlg"><div class="pwrap about"><h2>عن المنصة</h2>
+ <p>«دروسي» مبادرة طلابية غير رسمية، إلى أن يُعلَن خلاف ذلك، تجمع روابط الدروس والامتحانات السابقة والمراجع لطلبة المدرسة العليا للتربية والتكوين بالقنيطرة، مرتبةً حسب الفصل والمادة.</p>
+ <h3>المحتوى وحقوق النشر</h3>
+ <p>لا ترفع المنصة الملفات بنفسها، بل تعرض روابط لملفات مخزّنة على خدمات خارجية. يمر كل مصدر على مراجعة قبل نشره. إن كنتَ صاحب حق وترى أن مصدراً ينتهك حقك، أو وجدتَ ملفاً خاطئاً أو معطّلاً، فاضغط ⚑ بجانب المصدر أو راسلنا، وسنراجع البلاغ.</p>
+ <h3>الخصوصية</h3>
+ <p>لا تطلب المنصة من الزوار حساباً ولا بيانات شخصية، ولا تستعمل حالياً أدوات تتبع أو إعلانات. يُحفظ في متصفحك فقط ما يخص تجربتك: المصادر المحفوظة، والوضع الليلي، وما بلّغتَ عنه. تُحمَّل خطوط الموقع من خدمة Google Fonts. وتحتوي البلاغات على السبب والملاحظة التي تكتبها فقط. أما بريد أعضاء الفريق فمحفوظ لتسجيل دخولهم.</p>
+ <h3>التواصل</h3><p id="contact"></p>
+ <button class="ghost" type="button" id="aclose">إغلاق</button></div></dialog>
 <dialog id="pdlg"><div class="pwrap"><h2 id="ptitle"></h2><div class="tabs" id="ptabs"></div><div id="plist"></div><button class="ghost" type="button" id="pclose">إغلاق</button></div></dialog>
 <div class="toast" id="toast" role="status"></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.58.0/dist/umd/supabase.js"></script>

@@ -5,6 +5,9 @@ const Store={
  async add(d,status){const {data,error}=await sb.from('resources').insert({spec:d.spec,sem:d.sem,module:d.mod,type:d.type,title:d.title,url:d.url,year:d.year||null,status}).select().single();if(error)throw error;return fix(data)},
  async setStatus(id,status){const {data,error}=await sb.from('resources').update({status}).eq('id',id).select();if(error)throw error;if(!data.length)throw new Error('غير مسموح')},
  async remove(id){const {data,error}=await sb.from('resources').delete().eq('id',id).select();if(error)throw error;if(!data.length)throw new Error('غير مسموح')},
+ async report(id,reason,note){const {error}=await sb.from('reports').insert({resource_id:id,reason,note:note||null});if(error)throw error},
+ async openReports(){const {data,error}=await sb.from('reports').select('*').eq('status','open').order('created_at',{ascending:false});if(error)throw error;return data},
+ async closeReport(id){const {data,error}=await sb.from('reports').update({status:'done'}).eq('id',id).select();if(error)throw error;if(!data.length)throw new Error('غير مسموح')},
  favs(){try{return new Set(JSON.parse(localStorage.getItem('favs')||'[]'))}catch(e){return new Set()}},
  saveFavs(s){try{localStorage.setItem('favs',JSON.stringify([...s]))}catch(e){}}
 };
@@ -15,7 +18,7 @@ const COLOR={'درس':'var(--lesson)','امتحان سابق':'var(--exam)','م�
 const noun=n=>n===0?'لا مصادر بعد':n===1?'مصدر واحد':n===2?'مصدران':n<=10?n+' مصادر':n+' مصدراً';
 let tm;
 const norm=s=>String(s||'').toLowerCase().replace(/[\u064B-\u065F\u0670\u0640]/g,'').replace(/[إأآٱ]/g,'ا').replace(/ى/g,'ي').replace(/ة/g,'ه');
-let items=[],favs=Store.favs(),spec=SPECIALTIES[0],sem,mod=null,type='الكل',fav=false,q='',role=null,pview='pending';
+let items=[],favs=Store.favs(),spec=SPECIALTIES[0],sem,mod=null,type='الكل',fav=false,q='',role=null,pview='pending',reports=[];
 const isAdmin=()=>role==='admin';
 const published=()=>items.filter(i=>i.spec===spec.id&&i.status==='published');
 
@@ -34,10 +37,12 @@ async function checkRole(){
 function drawAuth(){
  $('#login').hidden=!!role;$('#logout').hidden=!role;$('#addBtn').hidden=!role;$('#panelBtn').hidden=!role;
  $('#addBtn').textContent=isAdmin()?'+ إضافة مصدر':'+ اقتراح مصدر';
- const n=items.filter(i=>i.status==='pending').length;
+ const n=items.filter(i=>i.status==='pending').length+(isAdmin()?reports.length:0);
  $('#panelBtn').textContent=(isAdmin()?'المراجعة':'مساهماتي')+(n?` (${n})`:'');
 }
-async function reload(){if(!$('#browse').hidden)showSkeleton();try{items=await Store.list()}catch(e){items=[];toast('تعذر تحميل المصادر، تحقق من الاتصال')}drawAuth();render()}
+async function reload(){if(!$('#browse').hidden)showSkeleton();try{items=await Store.list()}catch(e){items=[];toast('تعذر تحميل المصادر، تحقق من الاتصال')}
+ reports=[];if(isAdmin()){try{reports=await Store.openReports()}catch(e){}}
+ drawAuth();render()}
 
 function render(){
  const all=published(),active=q||mod||fav;
@@ -65,14 +70,18 @@ function drawResults(all){
  $('#types').innerHTML=TYPES.map(t=>`<button class="tab" aria-selected="${t===type}" data-type="${t}">${t}</button>`).join('');
  $('#count').textContent=l.length?noun(l.length):'';
  const cta=role?`<button class="btn" data-open>${isAdmin()?'+ إضافة مصدر':'+ اقتراح مصدر'}</button>`:'';
- $('#list').innerHTML=l.length?l.map(i=>`<article class="item"><span class="tbadge" style="--c:${COLOR[i.type]}">${esc(i.type)}</span><div class="body"><h3>${esc(i.title)}</h3><div class="meta">${esc(i.mod)} – ${esc(i.sem)}${i.year?' – '+esc(i.year):''}</div></div><div class="act"><a href="${esc(safeUrl(i.url))}" target="_blank" rel="noopener noreferrer">فتح</a>${isAdmin()?`<button class="del" data-del="${esc(i.id)}">حذف</button>`:''}<button class="star" data-id="${esc(i.id)}" aria-pressed="${favs.has(i.id)}" aria-label="حفظ">★</button></div></article>`).join('')
+ $('#list').innerHTML=l.length?l.map(i=>`<article class="item"><span class="tbadge" style="--c:${COLOR[i.type]}">${esc(i.type)}</span><div class="body"><h3>${esc(i.title)}</h3><div class="meta">${esc(i.mod)} – ${esc(i.sem)}${i.year?' – '+esc(i.year):''}</div></div><div class="act"><a href="${esc(safeUrl(i.url))}" target="_blank" rel="noopener noreferrer">فتح</a>${isAdmin()?`<button class="del" data-del="${esc(i.id)}">حذف</button>`:''}<button class="rep" data-rep="${esc(i.id)}" aria-label="بلّغ عن مشكلة" title="بلّغ عن مشكلة">⚑</button><button class="star" data-id="${esc(i.id)}" aria-pressed="${favs.has(i.id)}" aria-label="حفظ">★</button></div></article>`).join('')
  :`<div class="empty"><h3>${base?'لا توجد مصادر من هذا النوع':fav?'لم تحفظ أي مصدر بعد':'لا توجد مصادر هنا بعد'}</h3><p>${fav?'اضغط ★ على أي مصدر لحفظه هنا.':'سيُضاف المحتوى قريباً.'}</p>${fav?'':cta}</div>`;
 }
 function drawPanel(){
  const admin=isAdmin(),st=admin?pview:'pending';
  $('#ptitle').textContent=admin?'مراجعة المصادر':'مساهماتي قيد المراجعة';
  $('#ptabs').hidden=!admin;
- $('#ptabs').innerHTML=admin?[['pending','قيد المراجعة'],['hidden','المخفية']].map(([k,l])=>`<button class="tab" aria-selected="${k===pview}" data-pv="${k}">${l}</button>`).join(''):'';
+ $('#ptabs').innerHTML=admin?[['pending','قيد المراجعة'],['hidden','المخفية'],['reports','البلاغات'+(reports.length?` (${reports.length})`:'')]].map(([k,l])=>`<button class="tab" aria-selected="${k===pview}" data-pv="${k}">${l}</button>`).join(''):'';
+ if(admin&&st==='reports'){
+  $('#plist').innerHTML=reports.length?reports.map(r=>{const it=items.find(x=>x.id===r.resource_id);
+   return `<article class="pitem"><div class="body"><h3>${esc(it?it.title:'(مصدر محذوف)')}</h3><div class="meta">${esc(r.reason)}${r.note?' – '+esc(r.note):''}</div>${it?`<a class="plink" href="${esc(safeUrl(it.url))}" target="_blank" rel="noopener noreferrer">معاينة الرابط ↗</a>`:''}</div><div class="act">${it?`<button class="del" data-rhide="${esc(r.id)}" data-rres="${esc(r.resource_id)}">إخفاء المصدر</button>`:''}<button data-rdone="${esc(r.id)}">تجاهل</button></div></article>`}).join(''):'<div class="empty"><p>لا توجد بلاغات مفتوحة.</p></div>';
+  return}
  const l=items.filter(i=>i.status===st);
  const acts=i=>admin?(st==='pending'?`<button class="ok" data-st="published" data-pid="${esc(i.id)}">قبول</button><button class="del" data-st="hidden" data-pid="${esc(i.id)}">رفض</button>`:`<button class="ok" data-st="published" data-pid="${esc(i.id)}">استرجاع</button><button class="del" data-pdel="${esc(i.id)}">حذف</button>`):`<button class="del" data-pdel="${esc(i.id)}">سحب</button>`;
  $('#plist').innerHTML=l.length?l.map(i=>`<article class="pitem"><div class="body"><h3>${esc(i.title)}</h3><div class="meta">${esc(i.type)} – ${esc(i.mod)} – ${esc(i.sem)}${i.year?' – '+esc(i.year):''}</div><a class="plink" href="${esc(safeUrl(i.url))}" target="_blank" rel="noopener noreferrer">معاينة الرابط ↗</a></div><div class="act">${acts(i)}</div></article>`).join(''):'<div class="empty"><p>لا توجد عناصر هنا.</p></div>';
@@ -92,7 +101,7 @@ function checkUrl(u){
  return'';
 }
 document.addEventListener('click',e=>{
- const t=e.target.closest('[data-sem],[data-mod],[data-type],[data-id],[data-open],[data-del],[data-pv],[data-pid],[data-pdel]');if(!t)return;
+ const t=e.target.closest('[data-sem],[data-mod],[data-type],[data-id],[data-open],[data-del],[data-pv],[data-pid],[data-pdel],[data-rep],[data-rhide],[data-rdone]');if(!t)return;
  const d=t.dataset;
  if('sem'in d){sem=d.sem;render()}
  else if('mod'in d){mod=d.mod;type='الكل';render();scrollTo({top:0,behavior:'smooth'})}
@@ -105,9 +114,26 @@ document.addEventListener('click',e=>{
  else if('pid'in d){const id=d.pid,st=d.st;
   if(st==='hidden'&&!confirm('رفض هذا المصدر؟ سيُخفى عن العموم.'))return;
   Store.setStatus(id,st).then(()=>{const it=items.find(i=>i.id===id);if(it)it.status=st;drawAuth();drawPanel();render();toast(st==='published'?'تم النشر':'تم الرفض')}).catch(()=>toast('تعذر تنفيذ العملية'))}
+ else if('rep'in d){openReport(d.rep)}
+ else if('rhide'in d){const rid=d.rhide,res=d.rres;if(!isAdmin()||!confirm('إخفاء هذا المصدر عن العموم؟'))return;
+  Store.setStatus(res,'hidden').then(()=>Store.closeReport(rid)).then(()=>{const it=items.find(i=>i.id===res);if(it)it.status='hidden';reports=reports.filter(r=>r.id!==rid);drawAuth();drawPanel();render();toast('أُخفي المصدر وأُغلق البلاغ')}).catch(()=>toast('تعذر تنفيذ العملية'))}
+ else if('rdone'in d){if(!isAdmin())return;Store.closeReport(d.rdone).then(()=>{reports=reports.filter(r=>r.id!==d.rdone);drawAuth();drawPanel();toast('أُغلق البلاغ')}).catch(()=>toast('تعذر تنفيذ العملية'))}
  else if('pdel'in d){if(!confirm('حذف هذا المصدر نهائياً؟'))return;
   Store.remove(d.pdel).then(()=>{items=items.filter(i=>i.id!==d.pdel);drawAuth();drawPanel();render();toast('تم الحذف')}).catch(()=>toast('تعذر الحذف'))}
 });
+const REPORTED=(()=>{try{return new Set(JSON.parse(localStorage.getItem('reported')||'[]'))}catch(e){return new Set()}})();
+let lastReport=0,reportId=null;
+function openReport(id){if(REPORTED.has(id)){toast('سبق أن بلّغت عن هذا المصدر. شكراً لك');return}reportId=id;$('#rform').reset();$('#rdlg').showModal()}
+$('#rcancel').onclick=()=>$('#rdlg').close();
+$('#rform').onsubmit=async e=>{e.preventDefault();const f=e.target;
+ if(f.website.value){$('#rdlg').close();return}
+ if(Date.now()-lastReport<30000){toast('انتظر قليلاً قبل إرسال بلاغ آخر');return}
+ try{await Store.report(reportId,f.reason.value,f.note.value.trim().slice(0,300));
+  lastReport=Date.now();REPORTED.add(reportId);try{localStorage.setItem('reported',JSON.stringify([...REPORTED]))}catch(x){}
+  $('#rdlg').close();toast('وصل بلاغك. شكراً لمساعدتك')}
+ catch(err){toast('تعذر إرسال البلاغ، حاول لاحقاً')}};
+$('#aboutBtn').onclick=()=>$('#adlg').showModal();
+$('#aclose').onclick=()=>$('#adlg').close();
 $('#back').onclick=()=>{reset();render()};
 $('#home').onclick=e=>{e.preventDefault();reset();render()};
 $('#favOnly').onclick=e=>{fav=!fav;e.currentTarget.setAttribute('aria-pressed',fav);render()};
@@ -143,6 +169,7 @@ $('#logout').onclick=async()=>{await sb.auth.signOut();role=null;await reload();
 })();
 (async()=>{
  $('#brand').textContent=SITE.brand;$('#school').textContent=SITE.school;$('#headline').textContent=SITE.headline;$('#sub').textContent=SITE.sub;$('#foot-school').textContent=SITE.school;
+ $('#contact').innerHTML=SITE.contact?`للتواصل: <a href="mailto:${esc(SITE.contact)}">${esc(SITE.contact)}</a>`:'سيُضاف بريد التواصل قريباً.';
  $('#spec').innerHTML=SPECIALTIES.map(s=>`<option value="${s.id}">${esc(s.name)}</option>`).join('');
  showSkeleton();await checkRole();reset();
  try{const [s,m]=decodeURIComponent(location.hash.slice(1)).split('|');if(spec.semesters[s]&&spec.semesters[s].includes(m)){sem=s;mod=m}}catch(e){}

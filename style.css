@@ -85,10 +85,16 @@ dialog .btn{background:var(--accent);color:var(--on-accent)}
 @media(max-width:480px){.grid{grid-template-columns:1fr}}
 @media(prefers-reduced-motion:reduce){.sk,.grid>.mcard{animation:none!important}}
 
-#pdlg{width:min(680px,94vw)}
+#pdlg,#adlg{width:min(680px,94vw)}
 .pwrap{padding:20px;display:grid;gap:12px}
 #plist{display:grid;gap:10px;max-height:56vh;overflow:auto}
 .pitem{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;border:1px solid var(--line);border-radius:12px;padding:12px 14px}
 .plink{font-size:.85rem;color:var(--accent)}
 .act .ok{background:var(--accent);color:var(--on-accent);border-color:var(--accent)}
 .top .ghost{white-space:nowrap}
+
+dialog textarea{padding:10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);font:inherit;resize:vertical}
+.hp{position:absolute;inset-inline-start:-9999px;opacity:0;height:0;width:0}
+.linkbtn{background:none;border:0;color:#fff;text-decoration:underline;cursor:pointer;opacity:.85;padding:0;margin-top:6px;font:inherit}
+.about h3{margin:6px 0 0;font-size:1rem}.about p{color:var(--muted);margin:0}
+.rep{opacity:.75}
