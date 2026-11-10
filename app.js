@@ -86,7 +86,7 @@ function drawPanel(){
  const admin=isAdmin();
  const tabs=admin?[['pending','قيد المراجعة'],['rejected','المرفوضة'],['hidden','المخفية'],['reports','البلاغات'+(reports.length?` (${reports.length})`:'')]]:[['pending','قيد المراجعة'],['rejected','المرفوضة']];
  if(!tabs.some(t=>t[0]===pview))pview='pending';
- $('#ptitle').textContent=admin?'مراجعة المصادر':'مساهماتي';
+ $('#ptitle').textContent=admin?'مراجعة المصادر':'مساهماتي';$('#exportRow').hidden=!admin;
  $('#ptabs').innerHTML=tabs.map(([k,l])=>`<button class="tab" aria-selected="${k===pview}" data-pv="${k}">${l}</button>`).join('');
  if(admin&&pview==='reports'){
   $('#plist').innerHTML=reports.length?reports.map(r=>{const it=items.find(x=>x.id===r.resource_id);
@@ -167,6 +167,22 @@ $('#cancel').onclick=()=>$('#dlg').close();
 $('#dlg').addEventListener('close',()=>{editingId=null;if(backToPanel){backToPanel=false;drawPanel();$('#pdlg').showModal()}});
 $('#panelBtn').onclick=()=>{pview='pending';drawPanel();$('#pdlg').showModal()};
 $('#pclose').onclick=()=>$('#pdlg').close();
+// تصدير CSV (للمشرف فقط). الخلايا التي تبدأ برمز معادلة تُحصَّن حتى لا ينفّذها Excel.
+const csvCell=v=>{let s=v==null?'':String(v);if(/^[=+\-@\t\r]/.test(s))s="'"+s;return '"'+s.replace(/"/g,'""')+'"'};
+function downloadCsv(name,rows){
+ const body='\uFEFF'+rows.map(r=>r.map(csvCell).join(',')).join('\r\n');
+ const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([body],{type:'text/csv;charset=utf-8'}));
+ a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),1500);
+}
+const today=()=>new Date().toISOString().slice(0,10);
+$('#expRes').onclick=()=>{if(!isAdmin())return;
+ downloadCsv(`resources-${today()}.csv`,[['id','الفصل','المادة','معرّف الفصل','معرّف المادة','النوع','العنوان','السنة','الرابط','الحالة','سبب الرفض','تاريخ الإضافة']].concat(
+  items.map(i=>[i.id,semName(i.sem),modName(i.sem,i.mod),i.sem,i.mod,i.type,i.title,i.year,i.url,i.status,i.review_note,i.created_at])));
+ toast('تم تنزيل ملف المصادر')};
+$('#expRep').onclick=()=>{if(!isAdmin())return;
+ downloadCsv(`reports-${today()}.csv`,[['id','معرّف المصدر','عنوان المصدر','السبب','الملاحظة','التاريخ']].concat(
+  reports.map(r=>{const it=items.find(x=>x.id===r.resource_id);return[r.id,r.resource_id,it?it.title:'',r.reason,r.note,r.created_at]})));
+ toast('تم تنزيل ملف البلاغات (المفتوحة فقط)')};
 $('#chgpw').onclick=()=>{$('#pdlg').close();$('#npmsg').textContent='';$('#npdlg').showModal()};
 $('#add').onsubmit=async e=>{e.preventDefault();
  const d=Object.fromEntries(new FormData(e.target));d.spec=spec.id;
